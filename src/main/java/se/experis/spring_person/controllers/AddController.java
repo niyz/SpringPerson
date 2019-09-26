@@ -5,25 +5,15 @@ import org.springframework.web.bind.annotation.*;
 import se.experis.spring_person.model.DataBase;
 import se.experis.spring_person.model.Person;
 
-import java.util.ArrayList;
 
 @RestController
 public class AddController {
-    @GetMapping("/add")
-    public void addPerson(){
-        System.out.println("add metod");
+
+    // works but dont return anything...
+    @PostMapping("/add")
+    public void addPerson(@RequestBody Person pers){
+        new DataBase().insertPerson(pers);
     }
 
-    @GetMapping("/search")
-    public ArrayList<Person> searchShit(@RequestParam(name="str") String str){
-        //DataBase db = new DataBase();
-        return new DataBase().dbSearch(str);
-    }
-
-    @PostMapping("/greeting")
-    public String greetingSubmit(@ModelAttribute Person p) {
-        System.out.println(p);
-        return "result";
-    }
-
+    // add relations stuff
 }
