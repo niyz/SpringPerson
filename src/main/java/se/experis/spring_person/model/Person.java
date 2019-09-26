@@ -51,4 +51,31 @@ public class Person {
     public ArrayList<String> getEmailList(){
     	return this.emailList;
     }
+
+
+
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPersonID(String personID) {
+        this.personID = personID;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setPhoneIDList(ArrayList<String> phoneIDList) {
+        this.phoneIDList = phoneIDList;
+    }
+
+    public void setEmailList(ArrayList<String> emailList) {
+        this.emailList = emailList;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
 }

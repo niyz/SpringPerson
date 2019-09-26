@@ -3,12 +3,29 @@
 <head>
     <title>Getting Started: Handling Form Submission</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <script>
+    </script>
+
 </head>
 <body>
 <h1>Form</h1>
-<form action="#" th:action="@{/search}" th:object="${Person}" method="post">
-    <p>Search: <input type="text" th:field="{search}" /></p>
-    <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
+
+<form id="frm1" action="#">
+    First name: <input type="text" name="fname"><br>
+    Last name: <input type="text" name="lname"><br><br>
+    <input type="button" onclick="myFunction()" value="Submit">
 </form>
+
+<script>
+function myFunction() {
+  document.getElementById("frm1").submit();
+  var myJSON = JSON.stringify(name);
+  document.getElementById(frm1).innerHTML = myJSON;
+}
+</script>
+
+
+
 </body>
 </html>
