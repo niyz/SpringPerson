@@ -1,7 +1,12 @@
 package se.experis.spring_person.controllers;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import se.experis.spring_person.model.DataBase;
 import se.experis.spring_person.model.Person;
 
@@ -16,18 +21,24 @@ public class SearchController {
      * @param pers ojbect generated from json
      * @return arraylist with search results
      */
-    @PostMapping("/search")
-    public ArrayList<Person> searchPostInDb(@RequestBody Person pers){
-        if(pers.getName() != null){
-            return new DataBase().dbSearch(pers.getName());
-        }
-        if(pers.getLastName() != null){
-            return new DataBase().dbSearch(pers.getLastName());
-        }
-        if(pers.getPhoneIDList() != null){
-            return new DataBase().dbSearch(pers.getPhoneIDList().get(0));
-        }
-        return new ArrayList<>();
+    @GetMapping("/search")
+    public String search(Model model){
+    	model.addAttribute("str");
+    	DataBase db = new DataBase();
+    	
+    	ObjectMapper om = new ObjectMapper();
+    	String out = "";
+    	
+    	ArrayList<Person> list = db.dbSearch("");
+    	for(Person p:list) {
+    		try {
+				out+=om.writeValueAsString(p);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+    	}
+    	
+        return out;
     }
 
 
