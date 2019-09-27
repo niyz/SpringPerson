@@ -8,14 +8,17 @@ public class DataBase {
     }
 
     public Connection dbConnect() throws SQLException{
-        Connection conn = null;
-
+    	String url = "jdbc:sqlite::resource:Task17DB.db";
+        
+		Connection conn=null;// create a connection to the database
         try {
-            String dbUrl = "jdbc:sqlite::resource:Task17DB.db"; // add dbname.
-            conn = DriverManager.getConnection(dbUrl);
-        } catch (SQLException e) {
-            System.out.println("Error: dbConnect() : " + e.getMessage());
-        }
+			conn = DriverManager.getConnection(url);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+        
+        System.out.println("Connection to SQLite has been established.");
+        
         return conn;
     }
 

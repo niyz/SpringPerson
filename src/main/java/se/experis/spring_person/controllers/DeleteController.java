@@ -3,8 +3,9 @@ package se.experis.spring_person.controllers;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import se.experis.spring_person.model.DataBase;
 import se.experis.spring_person.model.Person;
+import se.experis.spring_person.model.*;
+
 
 import java.util.Collections;
 import java.util.Map;
