@@ -4,6 +4,12 @@
 - Simon Nilsson
 - Per-Anders Karlsson
 
+# list all persons in the database
+
+```
+http://<url>/searchCon
+```
+
 # Postman stuff.
 
 - ### add new person.
