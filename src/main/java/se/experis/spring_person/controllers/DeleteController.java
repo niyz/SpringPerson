@@ -6,13 +6,30 @@ import org.springframework.web.bind.annotation.RestController;
 import se.experis.spring_person.model.DataBase;
 import se.experis.spring_person.model.Person;
 
+import java.util.Collections;
+import java.util.Map;
+
 @RestController
 public class DeleteController {
-    // works but dont return anything...
+    /**
+     *  Takes a json body and converts it to a Person object to removes it and all relations in the database
+     *  the json must contain the personID
+     * @param pers Person object
+     * @return success true or false as json
+     */
     @PostMapping("/delete")
-    public void deleteFromDb(@RequestBody Person pers){
-        new DataBase().deletePerson(pers);
+    public Map<String, Boolean> deleteFromDb(@RequestBody Person pers){
+        return Collections.singletonMap("success", new DataBase().deletePerson(pers));
     }
 
-    //delete relation stuff if one would like to just delete relations...
+    /**
+     *  Takes a json body and converts it to a Person object to remove relationship relations in the database
+     *  the json must contain the personID
+     * @param pers Person object
+     * @return success true or false as json
+     */
+    @PostMapping("/delete/relation")
+    public Map<String, Boolean> deleteRelation(@RequestBody Person pers){
+        return Collections.singletonMap("success", new DataBase().deleteRelations(pers));
+    }
 }

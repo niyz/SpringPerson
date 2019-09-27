@@ -9,6 +9,8 @@ public class Person {
     private ArrayList<String>  phoneIDList;
     private ArrayList<String> emailList;
     private Address address;
+    private ArrayList<String> relationList;
+    private String relation = "";
 
     Person(String name, String personID, String lastName, ArrayList<String> phoneIDList, ArrayList<String> emailList, Address address){
         this.name = name;
@@ -17,8 +19,10 @@ public class Person {
         this.phoneIDList = phoneIDList;
         this.emailList = emailList;
         this.address = address;
+        this.relationList = new ArrayList<>();
     }
 
+    // only works with console application. or if all person variables has been manually set before we call it
     public void personToString(){
         System.out.print("\nName: " + name + "\nPerson ID: " + personID + "\nSurname: " + lastName + "\nPhone number: " + phoneIDList.get(0).toString());
         for (int i = 1; i < phoneIDList.size(); i++) {
@@ -77,5 +81,21 @@ public class Person {
 
     public void setAddress(Address address) {
         this.address = address;
+    }
+
+    public String getRelation() {
+        return relation;
+    }
+
+    public void setRelation(String relation) {
+        this.relation = relation;
+    }
+
+    public ArrayList<String> getRelationList(){
+        return this.relationList;
+    }
+
+    public void setRelationList(ArrayList<String> relation) {
+        this.relationList = relation;
     }
 }
