@@ -6,7 +6,7 @@
 
 # Postman stuff.
 
-- ###add new person.
+- ### add new person.
 send all the person values
 
 returns ```true ``` or ```false```
@@ -137,5 +137,3 @@ example:
 	"personID": "197702136533"
 }
 ````
-
-- ###
