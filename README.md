@@ -13,7 +13,7 @@ returns ```true ``` or ```false```
 ```
 POST http://<url>/add
 ```
-example
+example:
 ```
 {
         "name": "lisa",
