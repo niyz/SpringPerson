@@ -31,6 +31,25 @@ public class Person {
         address.printAddress();
     }
 
+    public String persString(){
+        String toReturn = "\nName: " + name  + "\nSurname: " + lastName + "\nPerson ID: " + personID  + "\nPhone number: ";
+        String numbers ="Number: ";
+        String emails = "Emails: ";
+        for (String nr: phoneIDList
+             ) {
+            numbers = numbers + ", "+ nr;
+
+        }
+        for (String mail: emailList
+        ) {
+            emails = emails + ", "+ mail;
+
+        }
+        toReturn = toReturn +"\n" +  numbers +"\n"+ emails + "\n" +address.addrToString();
+
+        return toReturn;
+    }
+
     public String getName(){
 
         return this.name;

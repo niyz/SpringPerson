@@ -20,6 +20,8 @@ public class SearchController {
         return db.dbSearch("");
     }
 
+
+
     /**
      * Takes a json body and converts it to a Person object to perform database searches
      * @param pers ojbect generated from json

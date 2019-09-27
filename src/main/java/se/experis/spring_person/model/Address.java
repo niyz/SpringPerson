@@ -20,6 +20,11 @@ public class Address {
                 "\nStreet number: " + houseNum + "\nPostal code: " + postalCode);
     }
 
+    public String addrToString() {
+        String toReturn = country + ", " + city + ", " + street + ", " + houseNum + ", " + postalCode;
+        return toReturn;
+    }
+
     public String getCountry() {
     	return this.country;
     }

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello Controller</title>
+</head>
+<body>
+    <th:block th:each="people : ${people}">
+            <p th:utext="'First name: '+${people.name}"></p>
+            <p th:utext="'Last name: '+${people.lastName}"></p>
+            <p th:utext="'PersonID: '+${people.personID}">...</p>
+            <p th:utext="'Phone(s): '+${people.phoneIDList}">...</p>
+            <p th:utext="'Email(s): '+${people.emailList}">...</p>
+            <p th:utext="'Address(es): '+${people.address.addrToString()}">...</p>
+            <p th:utext="'Relations: '+${people.relationList}">...</p>
+        <br />
+    </th:block>
+</body>
+</html>
