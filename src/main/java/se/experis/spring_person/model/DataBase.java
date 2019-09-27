@@ -14,20 +14,10 @@ public class DataBase {
             String dbUrl = "jdbc:sqlite::resource:Task17DB.db"; // add dbname.
             conn = DriverManager.getConnection(dbUrl);
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Error: dbConnect() : " + e.getMessage());
         }
         return conn;
     }
-
-
-    /**
-     * 1 = dad
-     * 2 = mom
-     * 3 = son
-     * 4 = daughter
-     * 5 = brother
-     * 6 = sister
-     */
 
 
     public ArrayList<Person> dbSearch(String searchStr){
@@ -35,6 +25,7 @@ public class DataBase {
         Connection conn = null;
         ArrayList<String> phoneList = null;
         ArrayList<String> mailList = new ArrayList<>();
+        ArrayList<String> relList = null;
         Address addr = null;
         Person p = null;
         try {
@@ -50,6 +41,7 @@ public class DataBase {
                 while(result.next()){
                     phoneList = this.getdbPhoneList(conn, result.getInt("personid"));
                     mailList = this.getdbEmailList(conn, result.getInt("personid"));
+                    relList= this.getRelations(conn, result.getInt("personid"));
 
                     String addressidSQL = "SELECT adressid FROM person WHERE id = ?";
                     PreparedStatement addrstmt = conn.prepareStatement(addressidSQL);
@@ -62,14 +54,15 @@ public class DataBase {
 
 
                     addr = this.getdbAddress(conn, addrId);
-
-                    pList.add(p = getdbPerson(
+                    p = getdbPerson(
                             conn,
                             result.getInt("personid"),
                             addr,
                             mailList,
                             phoneList
-                    ));
+                    );
+                    p.setRelationList(relList);
+                    pList.add(p);
                 }
             } else {
                 // do the person lookup thing
@@ -80,32 +73,31 @@ public class DataBase {
                 pstmt.setString(2, "%" + searchStr + "%");
                 ResultSet result = pstmt.executeQuery();
 
-
                 while(result.next()){
                     phoneList = this.getdbPhoneList(conn, result.getInt("id"));
                     mailList = this.getdbEmailList(conn, result.getInt("id"));
                     addr = this.getdbAddress(conn, result.getInt("adressid"));
-
-                    pList.add(p = getdbPerson(
+                    relList= this.getRelations(conn, result.getInt("id"));
+                    p = getdbPerson(
                             conn,
                             result.getInt("id"),
                             addr,
                             mailList,
                             phoneList
-                    ));
+                    );
+                    p.setRelationList(relList);
+                    pList.add(p);
                 }
             }
         } catch (SQLException e) {
-            System.out.println("SQLException in db search");
-            System.out.println(e.getMessage());
+            System.out.println("Error: dbSearch() : " + e.getMessage());
         } finally {
             try{
                 if(conn != null){
                     conn.close();;
                 }
             } catch (SQLException e){
-                System.out.println("SQL Exeption when closing databas connection in db search");
-                System.out.println(e.getMessage());
+                System.out.println("Error: dbSearch(); conn.close() : " + e.getMessage());
             }
         }
 
@@ -117,10 +109,8 @@ public class DataBase {
      */
     private boolean isLong(String str){
         try{
-            //Integer.parseInt(str);
             Long.parseLong(str);
         } catch (NumberFormatException e){
-            //System.out.println("String is not an int. ");
             return false;
         }
         return true;
@@ -147,8 +137,7 @@ public class DataBase {
                         );
             }
         } catch (SQLException e) {
-            System.out.println("SQLException getdbPerson");
-            System.out.println(e.getMessage());
+            System.out.println("Error: getdbPerson() : " + e.getMessage());
         }
         return p;
     }
@@ -172,8 +161,7 @@ public class DataBase {
             }
 
         } catch (SQLException e){
-            System.out.println("SQLException getdbAddress");
-            System.out.println(e.getMessage());
+            System.out.println("Error: getdbAddress() : " + e.getMessage());
         }
         return addr;
     }
@@ -191,8 +179,7 @@ public class DataBase {
                 phoneList.add(result.getString("phone"));
             }
         } catch (SQLException e){
-            System.out.println("sqlexeption in getdbPhoneList");
-            System.out.println(e.getMessage());
+            System.out.println("Error: getdbPhoneList() : " + e.getMessage());
         }
 
         return phoneList;
@@ -210,19 +197,48 @@ public class DataBase {
                 emailList.add(result.getString("email"));
             }
         } catch (SQLException e){
-            System.out.println("sqlexeption in getdbEmailList");
-            System.out.println(e.getMessage());
+            System.out.println("Error: getdbEmailList() : " + e.getMessage());
         }
 
         return emailList;
     }
 
+    private ArrayList<String> getRelations(Connection conn, int id){
+        String sql = "SELECT person1,person2,relation FROM relationship where person1 = ? or person2 = ?";
+        ArrayList<String> relationList = new ArrayList<>();
+        String whoSql = "SELECT firstName,lastName FROM person where id=?";
 
-    /**
-     * Elliot
-     */
-    public void insertPerson(Person person){
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, id);
+            pstmt.setInt(2, id);
+            ResultSet result = pstmt.executeQuery();
+            String relation ="";
+            while (result.next()) {
+                //relationList.add(result.getString("email"));
+                if(result.getInt("person1") == id){
+                    //System.out.println(result.getInt("person1"));
+                    PreparedStatement pstmt2 = conn.prepareStatement(whoSql);
+                    pstmt2.setInt(1, result.getInt("person2"));
 
+                    ResultSet rs= pstmt2.executeQuery();
+                    relation = result.getString("relation");
+                    while(rs.next()){
+                        relation += " to " + rs.getString("firstName") + " " + rs.getString("lastName");
+                    }
+                    relationList.add(relation);
+                }
+            }
+        } catch (SQLException e){
+            System.out.println("Error: getRelations() : " + e.getMessage());
+        }
+
+        return relationList;
+    }
+
+
+    public boolean insertPerson(Person person){
+        boolean wasSuccessful = false;
         Connection conn = null;
 
 
@@ -246,43 +262,122 @@ public class DataBase {
             }
 
             conn.commit();
+            wasSuccessful = true;
         } catch (SQLException e) {
             try {
-                conn.rollback();
+                if (conn != null) {
+                    conn.rollback();
+                }
             } catch (SQLException ex) {
-                ex.printStackTrace();
+                System.out.println("Error: insertPerson(); conn.rollback() : " + ex.getMessage());
             }
         } finally {
             if(conn != null){
                 try {
                     conn.close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    System.out.println("Error: insertPerson(); conn.close() : " + e.getMessage());
                 }
             }
         }
+        return wasSuccessful;
     }
 
-    public void addRelation(Person p1, Person p2, int typeOfRelation) throws SQLException{
-        Connection conn = dbConnect();
-        String id1 = selectAnID(conn,"SELECT id FROM person WHERE personID='"+p1.getPersonID()+"'");
-        String id2 = selectAnID(conn,"SELECT id FROM person WHERE personID='"+p2.getPersonID()+"'");
+    //changed to boolean for browser output and removed int so that user has to state what each person is with a string ex father/son
+
+    /**
+     * @param p1 needs person object that contains personID and relation set from json
+     * @param p2 needs person object that contains personID and relation set from json
+     * @return true if successful eles false
+     */
+    public boolean addRelation(Person p1, Person p2){
+        boolean wasSuccessful = false;
+        Connection conn = null;
+
+        try {
+            conn = dbConnect();
+            conn.setAutoCommit(false);
+            String id1 = selectAnID(conn,"SELECT id FROM person WHERE personID='"+p1.getPersonID()+"'");
+            String id2 = selectAnID(conn,"SELECT id FROM person WHERE personID='"+p2.getPersonID()+"'");
 
 
-        String addRelation = "INSERT INTO relationship(person1,person2,relation) VALUES('"+id1+"','"+id2+"','"+typeOfRelation+"')";
+            String addRelation = "INSERT INTO relationship(person1,person2,relation) VALUES('"+id1+"','"+id2+"','"+/*typeOfRelation*/p1.getRelation()+"')";
+            String addRelation2 = "INSERT INTO relationship(person1,person2,relation) VALUES('"+id2+"','"+id1+"','"+/*typeOfRelation*/p2.getRelation()+"')";
 
-        executeInsertSQL(conn,addRelation);
+            if(executeInsertSQL(conn,addRelation) && executeInsertSQL(conn, addRelation2)){
+                conn.commit();
+                wasSuccessful = true;
+            }
+        } catch (SQLException e) {
+            try {
+                if(conn != null){
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                System.out.println("Error: addRelation(); conn.rollback() : " + ex.getMessage());
+            }
+        } finally {
+            try{
+                if(conn != null){
+                    conn.close();
+                }
+            } catch (SQLException e){
+                System.out.println("Error: addRelation(); conn.close()" + e.getMessage());
+            }
+        }
+        return wasSuccessful;
     }
 
-    public void deleteRelations(Person person) throws SQLException{
-        Connection conn = dbConnect();
-        String id = selectAnID(conn,"SELECT id FROM person WHERE personID='"+person.getPersonID()+"'");
-        String deleteRelation = "DELETE FROM relationship WHERE person1='"+id+"' OR person2='"+id+"'";
-        executeInsertSQL(conn,deleteRelation);
-        conn.close();
+    //changed too boolean for browser output if just delete relations
+
+    /**
+     *
+     * @param person object that must contain a set personID
+     * @return true if successful else false
+     */
+    public boolean deleteRelations(Person person){
+        boolean wasSuccessful = false;
+        Connection conn = null;
+        try {
+            conn = dbConnect();
+            conn.setAutoCommit(false);
+            String id = selectAnID(conn,"SELECT id FROM person WHERE personID='"+person.getPersonID()+"'");
+            String deleteRelation = "DELETE FROM relationship WHERE person1='"+id+"' OR person2='"+id+"'";
+            if(executeInsertSQL(conn,deleteRelation)) {
+                conn.commit();
+                wasSuccessful = true;
+            }
+        } catch (SQLException e){
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex){
+                System.out.println("Error: deleteRelation(); conn.rollback()  : " + e.getMessage());
+            }
+        } finally {
+            try {
+                if(conn!=null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("Error: deleteRelation(); conn.close() : " + e.getMessage());
+            }
+
+        }
+        return wasSuccessful;
     }
 
-    public void updatePerson(Person oldPerson, Person newPerson){
+    //changed to boolean for browser output..
+
+    /**
+     *
+     * @param oldPerson object that has to have everything set
+     * @param newPerson object that has to have values to update and values not to update set.
+     * @return true if successful else false
+     */
+    public boolean updatePerson(Person oldPerson, Person newPerson){
+        boolean wasSuccessful = false;
         Connection conn = null;
 
         try {
@@ -300,7 +395,7 @@ public class DataBase {
 
             System.out.println(executeUpdateString);
 
-            executeInsertSQL(conn,executeUpdateString);
+            wasSuccessful = executeInsertSQL(conn,executeUpdateString);
 
 
             ArrayList<String> selectAllId = selectAllId(conn,"SELECT id FROM phone WHERE personID='"+ID+"'");
@@ -327,11 +422,14 @@ public class DataBase {
                 executeInsertSQL(conn,"INSERT INTO email(email,personID) VALUES('"+newPerson.getEmailList().get(i)+"','"+ID+"')");
             }
             conn.commit();
+            wasSuccessful = true;
         } catch (SQLException e) {
             try {
-                conn.rollback();
+                if(conn != null) {
+                    conn.rollback();
+                }
             } catch (SQLException ex) {
-                ex.printStackTrace();
+                System.out.println("Error: updatePerson(); conn.rollback() : " + e.getMessage());
             }
             e.printStackTrace();
         } finally {
@@ -340,9 +438,10 @@ public class DataBase {
                     conn.close();
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                System.out.println("Error: updatePerson(); conn.close() : " + e.getMessage());
             }
         }
+        return wasSuccessful;
 
     }
 
@@ -352,21 +451,17 @@ public class DataBase {
 
     private static ArrayList<String> selectAllId(Connection conn, String sql) {
         ArrayList<String> ids = new ArrayList<String>();
-        //Connection conn = connect();
         Statement stmt;
         ResultSet rs = null;
         try {
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);
-
-            //info=rs.getString("adressID");
             while (rs.next()) {
                 ids.add(rs.getString("id"));
             }
 
         } catch (SQLException e) {
-
-            e.printStackTrace();
+            System.out.println("Error: selectAllId() : " + e.getMessage());
         }
 
         return ids;
@@ -375,21 +470,18 @@ public class DataBase {
     private static String selectAdressID(Connection conn, String sql) {
         String info = "";
 
-        //Connection conn = connect();
         Statement stmt;
         ResultSet rs = null;
         try {
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);
 
-            //info=rs.getString("adressID");
             while (rs.next()) {
                 info=rs.getString("adressID");
             }
 
         } catch (SQLException e) {
-
-            e.printStackTrace();
+            System.out.println("Error: selectAdressID() : " + e.getMessage());
         }
 
         return info;
@@ -397,21 +489,17 @@ public class DataBase {
 
     private String selectAnID(Connection conn, String sql) {
         String info = "";
-        //Connection conn = connect();
         Statement stmt;
         ResultSet rs = null;
         try {
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);
-
-            //info=rs.getString("id");
             while (rs.next()) {
                 info=rs.getString("id");
             }
 
         } catch (SQLException e) {
-
-            e.printStackTrace();
+            System.out.println("Error: selectAnID() : " + e.getMessage());
         }
 
         return info;
@@ -436,84 +524,58 @@ public class DataBase {
         return result;
     }
 
-    private static void executeInsertSQL(Connection conn, String sql) throws SQLException {
-        //Connection conn = connect();
+    private static boolean executeInsertSQL(Connection conn, String sql) throws SQLException {
         boolean autoCommit = false;
         autoCommit = conn.getAutoCommit();
-            //System.out.println("autocommit: " + autoCommit);
         conn.setAutoCommit(false);
         Statement pstmt = conn.createStatement();
-        pstmt.executeUpdate(sql);
-        //conn.commit();
-
-        /*boolean autoCommit = false;
-        try{
-            autoCommit = conn.getAutoCommit();
-            //System.out.println("autocommit: " + autoCommit);
-            conn.setAutoCommit(false);
-            Statement pstmt = conn.createStatement();
-            pstmt.executeUpdate(sql);
-            conn.commit();
+        int successful = pstmt.executeUpdate(sql);
+        if(successful > 0){
+            return true;
         }
-        catch (SQLException e) {
-            try {
-                System.out.println("rolling back");
-                conn.rollback();
-            } catch (SQLException e1) {
-                System.out.println("rollback error: " + e.getMessage());
-                e1.printStackTrace();
-            }
-            System.out.println("sqlerror: " +  e.getMessage());
-            e.printStackTrace();
-        }
-        finally {
-            try {
-                conn.setAutoCommit(autoCommit);
-            } catch (SQLException e) {
-
-                e.printStackTrace();
-            }
-        }*/
+        return false;
     }
 
     /**
-     * simon
+     *
+     * @param person object with personID set
+     * @return true if successful else false
      */
-
-    public void deletePerson(Person person) /*throws SQLException*/{
-        try {
-            deleteRelations(person);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public boolean deletePerson(Person person) {
+        boolean wasSuccess = false;
+        deleteRelations(person);
 
         Connection conn = null;
 
         try {
             conn = dbConnect();
             String selectPersonSQL = "SELECT id FROM person WHERE personID='"+person.getPersonID()+"'";
-            //String selectPersonSQL = "SELECT id FROM person WHERE personID=197702136543";
-            //System.out.println(selectPersonSQL);
+
             String ID = selectAnID(conn,selectPersonSQL);
-            //System.out.println("id: " + ID);
-            //System.out.println("PHONE: ");
+
             String sqlStatementPhone = "DELETE FROM phone WHERE personID='"+ID+"'";
-            //selectAllId(conn,sqlStatement);
-            //System.out.println("MAIL: ");
+
 
             String sqlStatementMail = "DELETE FROM email WHERE personID='"+ID+"'";
             String sqlStatementPerson = "DELETE FROM person WHERE id='"+ID+"'";
             conn.setAutoCommit(false);
-            executeInsertSQL(conn, sqlStatementPhone);
-            executeInsertSQL(conn, sqlStatementMail);
-            executeInsertSQL(conn, sqlStatementPerson);
-            conn.commit();
+
+            if(executeInsertSQL(conn, sqlStatementPhone)
+                    && executeInsertSQL(conn, sqlStatementMail)
+                    && executeInsertSQL(conn, sqlStatementPerson)) {
+                conn.commit();
+                wasSuccess = true;
+            }
 
         } catch (SQLException e) {
             try {
-                conn.rollback();
+                if(conn != null) {
+                    conn.rollback();
+                    wasSuccess = false;
+                }
             } catch (SQLException ex) {
-                ex.printStackTrace();
+                System.out.println("Error: deletePerson(); conn.rollback() : " + e.getMessage());
+
             }
             e.printStackTrace();
         } finally {
@@ -521,15 +583,15 @@ public class DataBase {
                 try {
                     conn.close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    System.out.println("Error: deletePerson(); conn.close() : " + e.getMessage());
                 }
             }
         }
 
-
+        return wasSuccess;
     }
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         DataBase d = new DataBase();
 
         ArrayList<String> email = new ArrayList<String>();
@@ -543,18 +605,8 @@ public class DataBase {
         Person oldPerson = new Person("Sven","199909098181","Urbansson",phoneNums,email,adress);
         Person newPerson = new Person("Sven","199909098181","svensson",phoneNums,email,adress);
 
-
-        //d.insertPerson(oldPerson);
-        //d.deletePerson(oldPerson);
         d.updatePerson(oldPerson,newPerson);
-        /*try {
-            //d.updatePerson(oldPerson,newPerson);
-            //d.deletePerson(oldPerson);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }*/
 
-
-    }
+    }*/
 
 }

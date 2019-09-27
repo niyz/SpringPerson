@@ -10,20 +10,24 @@ import java.util.ArrayList;
 @RestController
 public class SearchController {
 
-    /*@GetMapping("/searche/{str}")
-    //@ResponseBody
-    public ArrayList<Person> searchInDb(@PathVariable("str") String str){
-        return new DataBase().dbSearch(str);
-    }*/
 
-    // works but dont return anything...
     /**
-     * det vi skickar som json görs om till ett person objekt det är objektet som sedan används vid sökningen
+     * Takes a json body and converts it to a Person object to perform database searches
+     * @param pers ojbect generated from json
+     * @return arraylist with search results
      */
     @PostMapping("/search")
     public ArrayList<Person> searchPostInDb(@RequestBody Person pers){
-        System.out.println(pers.getName());
-        return new DataBase().dbSearch(pers.getName());
+        if(pers.getName() != null){
+            return new DataBase().dbSearch(pers.getName());
+        }
+        if(pers.getLastName() != null){
+            return new DataBase().dbSearch(pers.getLastName());
+        }
+        if(pers.getPhoneIDList() != null){
+            return new DataBase().dbSearch(pers.getPhoneIDList().get(0));
+        }
+        return new ArrayList<>();
     }
 
 
