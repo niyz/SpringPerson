@@ -6,13 +6,15 @@ import se.experis.spring_person.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import se.experis.spring_person.Greeting;
+import se.experis.spring_person.model.*;
+
 
 @Controller
 public class GreetingController {
 
     @GetMapping("/greeting")
     public String greetingForm(Model model){
-        model.addAttribute("greeting", new Person());
+        //model.addAttribute("greeting", new Person());
 
         return "greeting";
     }
